@@ -1,0 +1,144 @@
+﻿@model ecommerce.Models.ViewModel.UserDataView
+
+<div>
+    <h1>Liste des utilisateurs</h1>
+    <span class="alert-success">@ViewBag.Message</span>
+    <table class="table table-striped table-condensed table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>LoginName</th>
+                <th>FirstName</th>
+                <th>LastName</th>
+                <th>Password</th>
+                <th>Gender</th>
+                <th colspan="2">Role</th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var i in Model.UserProfile)
+            {
+                <tr>
+                    <td>@Html.DisplayFor(m => i.SYSUserID)</td>
+                    <td>@Html.DisplayFor(m => i.LoginName)</td>
+                    <td>@Html.DisplayFor(m => i.FirstName)</td>
+                    <td>@Html.DisplayFor(m => i.LastName)</td>
+                    <td>@Html.DisplayFor(m => i.Password)</td>
+                    <td>@Html.DisplayFor(m => i.Gender)</td>
+                    <td>@Html.DisplayFor(m => i.RoleName)</td>
+                    <td>@Html.HiddenFor(m => i.LOOKUPRoleID)</td>
+                    <td><a href="javascript:void(0)" class="lnkEdit">Edit</a></td>
+                    <td><a href="javascript:void(0)" class="lnkDelete">Delete</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<div id="divEdit" style="display: none">
+    <input type="hidden" id="hidID" />
+    <table>
+        <tr>
+            <td>Login Name</td>
+            <td><input type="text" id="txtLoginName" class="form-control" /></td>
+        </tr>
+        <tr>
+            <td>Password</td>
+            <td><input type="text" id="txtPassword" class="form-control" /></td>
+        </tr>
+        <tr>
+            <td>First Name</td>
+            <td><input type="text" id="txtFirstName" class="form-control" /></td>
+        </tr>
+        <tr>
+            <td>Last Name</td>
+            <td><input type="text" id="txtLastName" class="form-control" /></td>
+        </tr>
+        <tr>
+            <td>Gender</td>
+            <td>
+                @Html.DropDownListFor(o => o.UserGender.SelectedGender,
+                new SelectList(Model.UserGender.Gender, "Value", "Test"),
+                "", new { Id = "ddlGender", @class="form-control"})
+            </td>
+        </tr>
+        <tr>
+            <td>Role</td>
+            <td>
+                @Html.DropDownListFor(o => o.UserRole.SelectRoleID,
+                new SelectList(Model.UserRole.UserRoleList, "LOOKUPRoleID", "RoleName"),
+                "", new { Id = "ddlRoles", @class="form-control"})
+            </td>
+        </tr>
+    </table>
+</div>
+<script type="text/javascript">
+    $(function () {
+        var initDialog = function (type) {
+            var title = type;
+            $("#divEdit").dialog({
+                autoOpen: false,
+                modal: true,
+                title: type + 'User',
+                width: 360,
+                buttons: {
+                    Save: function () {
+                        var id = $("hidID").val();
+                        var role = $("ddlRoles").val();
+                        var loginName = $("txtLoginName").val();
+                        var loginPass = $("txtPassword").val();
+                        var fName = $("txtFirstName").val();
+                        var lName = $("txtLastName").val();
+                        var gender = $("ddlGender").val();
+                        //update action
+                        updateUser(id, role, loginName, loginPass, fName, lName, gender);
+                        $(this).dialog("destroy");
+                    },
+                    Cancel: function () {
+                        $(this).dialog("destroy");
+                    }
+                }
+            })
+        }
+
+        function updateUser(id, role, loginName, loginPass, fName, lName, gender) {
+            $.ajax({
+                type: "POST",
+                url: "@(Url.Action("UpdateUserData", "Home"))",
+                data: {
+                    userID: id,
+                    loginName: loginName,
+                    password: loginPass,
+                    firstName: fName,
+                    lastName: lName,
+                    gender: gender,
+                    roleId: role
+                },
+                success: function (data) {
+                    $("#divUserListContainer").load("@(Url.Action("ManagerUserPartial", "Home", new {status = "update"}))");
+                },
+                error: function (error) {
+                }
+            });
+        }
+
+        $("a.lnkEdit").on("click", function () {
+            initDialog("Edit");
+            $(".alert-success").empty();
+            var row = $(this).closest('tr');
+            $("#hidID").val(row.find("td:eq(0)").html().trim());
+            $("#txtLoginName").val(row.find("td:eq(1)").html().trim());
+            $("#txtPassword").val(row.find("td:eq(2)").html().trim());
+            $("#txtFirstName").val(row.find("td:eq(3)").html().trim());
+            $("#txtLastName").val(row.find("td:eq(4)").html().trim());
+            $("#ddlGender").val(row.find("td:eq(5)").html().trim());
+            $("#ddlRoles").val(row.find("td:eq(7)").html().trim());
+
+            $("#divEdit").dialog("open");
+            return false;
+        })
+
+
+    })
+</script>
